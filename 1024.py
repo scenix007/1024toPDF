@@ -1,9 +1,10 @@
 #!/bin/env python
 #encoding=utf-8
-# Author: shaolong - shaolong@sogou-inc.com
+# Author: Aaron
 # Last modified: 2014-10-22 23:42
-# Filename: cl.py
+# Filename: 1024.py
 # Description: 
+
 import sys
 import time
 import socks
