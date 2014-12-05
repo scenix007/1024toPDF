@@ -75,16 +75,24 @@ class AppURLopener(urllib.FancyURLopener):
     version="Mozilla/5.0"
 
 def down_load_single_image(image_url, index):
-    print >> sys.stderr, "Start downloading image %d, url: %s" % (index, image_url)
-    socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", 7777)
-    socket.setdefaulttimeout(20) 
-    socket.socket = socks.socksocket
-    try:
-        urllib._urlopener = AppURLopener()
-        urllib.urlretrieve(image_url, 'tmp/%d.jpg' % (index+1))
-    except Exception,e:
-        print >> sys.stderr, e
-    print >> sys.stderr, "Finish downloading image %d, url: %s" % (index, image_url)
+    max_retry = 3
+    is_done = False
+    for cur_try in xrange(1, max_retry+1):
+        print >> sys.stderr, "Start downloading image %d attempt %d, url: %s" % (index,cur_try, image_url)
+        socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", 7777)
+        socket.setdefaulttimeout(20) 
+        socket.socket = socks.socksocket
+        try:
+            urllib._urlopener = AppURLopener()
+            urllib.urlretrieve(image_url, 'tmp/%d.jpg' % (index+1))
+        except Exception,e:
+            print >> sys.stderr, e
+            continue
+        print >> sys.stderr, "Finish downloading image %d on attempt %d, url: %s" % (index,cur_try, image_url)
+        is_done = True
+        return
+    if False == is_done:
+        print >> sys.stderr, "Failed downloading image %d, url: %s" % (index, image_url)
     
 
 
