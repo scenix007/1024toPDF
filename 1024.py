@@ -38,7 +38,7 @@ def get_html(url):
     return response.read()
 
 def find_image_urls(html):
-    urls = re.findall(r'http://\S+\.jpg', html)
+    urls = re.findall(r'https?://\S+\.jpg', html)
     if len(urls) == 0:
         print >> sys.stderr, "Can not find image urls"
     out_f = file('download_list.txt', 'w')
@@ -67,6 +67,8 @@ def download_images(image_urls):
         while threading.activeCount() > 11:
             time.sleep(1) 
         t.start()
+    while threading.activeCount() > 1:
+        time.sleep(1) 
         
 class AppURLopener(urllib.FancyURLopener):
     pass
@@ -75,6 +77,7 @@ class AppURLopener(urllib.FancyURLopener):
 def down_load_single_image(image_url, index):
     print >> sys.stderr, "Start downloading image %d, url: %s" % (index, image_url)
     socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", 7777)
+    socket.setdefaulttimeout(20) 
     socket.socket = socks.socksocket
     try:
         urllib._urlopener = AppURLopener()
