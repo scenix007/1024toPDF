@@ -15,6 +15,7 @@ import re
 import os
 import threading
 
+SOCKS_PORT = 1080
 
 def get_url():
     pass
@@ -32,7 +33,8 @@ def get_outfname():
 
 def get_html(url):
     pass
-    socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", 7777)
+    global SOCKS_PORT
+    socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", SOCKS_PORT)
     socket.socket = socks.socksocket
     response = urllib2.urlopen(url)
     return response.read()
@@ -41,6 +43,21 @@ def find_image_urls(html):
     urls = re.findall(r'https?://\S+\.jpg', html)
     if len(urls) == 0:
         print >> sys.stderr, "Can not find image urls"
+
+    domain_count = {}
+    for url in urls:
+        domain = url.split('/')[2]
+        domain = '.'.join(domain.split('.')[-2:])
+        if domain not in domain_count:
+            domain_count[domain] = 1
+        else:
+            domain_count[domain] += 1
+    domain_count = sorted(domain_count.items(), key=lambda x:x[1], reverse=True)
+
+    top_domain = domain_count[0][0]
+
+    urls = filter(lambda x : top_domain in x, urls)
+
     out_f = file('download_list.txt', 'w')
     for url in urls:
         out_f.write(url+'\n')
@@ -75,11 +92,12 @@ class AppURLopener(urllib.FancyURLopener):
     version="Mozilla/5.0"
 
 def down_load_single_image(image_url, index):
+    global SOCKS_PORT
     max_retry = 3
     is_done = False
     for cur_try in xrange(1, max_retry+1):
         print >> sys.stderr, "Start downloading image %d attempt %d, url: %s" % (index,cur_try, image_url)
-        socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", 7777)
+        socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", SOCKS_PORT)
         socket.setdefaulttimeout(20) 
         socket.socket = socks.socksocket
         try:
