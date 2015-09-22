@@ -17,6 +17,8 @@ import threading
 
 SOCKS_PORT = 1080
 
+USING_PROXY = False
+
 def get_url():
     pass
     if len(sys.argv) != 3:
@@ -34,13 +36,19 @@ def get_outfname():
 def get_html(url):
     pass
     global SOCKS_PORT
-    socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", SOCKS_PORT)
-    socket.socket = socks.socksocket
-    response = urllib2.urlopen(url)
+    global USING_PROXY
+    if USING_PROXY:
+        socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", SOCKS_PORT)
+        socket.socket = socks.socksocket
+
+    req = urllib2.Request(url, headers={'User-Agent' : "Magic Browser"}) 
+    response = urllib2.urlopen(req)
     return response.read()
 
 def find_image_urls(html):
-    urls = re.findall(r'https?://\S+\.jpg', html)
+    p = re.compile(r'https?://\S+\.jpe?g')
+    urls = p.findall(html)
+    #urls = re.findall(r'https?://\S+\.(jpeg|jpg|png)', html)
     if len(urls) == 0:
         print >> sys.stderr, "Can not find image urls"
 
@@ -93,13 +101,15 @@ class AppURLopener(urllib.FancyURLopener):
 
 def down_load_single_image(image_url, index):
     global SOCKS_PORT
+    global USING_PROXY
     max_retry = 3
     is_done = False
     for cur_try in xrange(1, max_retry+1):
         print >> sys.stderr, "Start downloading image %d attempt %d, url: %s" % (index,cur_try, image_url)
-        socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", SOCKS_PORT)
-        socket.setdefaulttimeout(20) 
-        socket.socket = socks.socksocket
+        if USING_PROXY:
+            socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", SOCKS_PORT)
+            socket.setdefaulttimeout(20) 
+            socket.socket = socks.socksocket
         try:
             urllib._urlopener = AppURLopener()
             urllib.urlretrieve(image_url, 'tmp/%d.jpg' % (index+1))
