@@ -52,6 +52,9 @@ def find_image_urls(html):
     if len(urls) == 0:
         print >> sys.stderr, "Can not find image urls"
 
+    # filter www.viidii.info redirection
+    urls = map(lambda url: 'www.viidii.info' in url and urllib.unquote_plus(url)[urllib.unquote_plus(url).find('url=')+4:] or url, urls)
+
     domain_count = {}
     for url in urls:
         domain = url.split('/')[2]
